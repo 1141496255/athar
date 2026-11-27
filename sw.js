@@ -1,5 +1,5 @@
 // أثر — Service worker: offline support
-const CACHE = 'athar-v1';
+const CACHE = 'athar-v2';
 const ASSETS = ['./', './index.html', './css/style.css', './js/app.js', './manifest.webmanifest',
   './assets/mark.png', './assets/logo.jpg', './assets/icon-192.png', './assets/icon-512.png'];
 

@@ -859,11 +859,11 @@ function log(id){
 function onboarding(){
   const slides = [
     { art:`<div style="position:relative;width:70%;aspect-ratio:1"><span class="ripple" style="inset:10%"></span><span class="ripple" style="inset:10%"></span><img src="assets/mark.png" style="width:100%;mix-blend-mode:multiply;position:relative" alt=""></div>`,
-      h:'أنت أدرى فيه.. اكتب عنه', p:'تكتب احتياجاته بنفسك، وكيف يبيّن كل حاجة، ووش يطمّنه. لو غبت، اللي يستلم يلقى كل شي.' },
+      h:'معرفتك عنه.. محفوظة', p:'اكتب روتينه، واحتياجاته وكيف يعبّر عن كل حاجة، ووش يطمّنه. لو غبت، اللي يستلم يلقى كل شي.' },
     { art:`<div style="width:78%"><div class="result-top" style="margin:0;padding:18px;text-align:start"><small>على الأرجح يحتاج</small><h1 style="font-size:24px">🚻 الحمام</h1>
         <div class="pct"><i style="width:82%"></i></div><div class="pctl"><span>درجة الترجيح</span><b>٨٢٪</b></div></div>
-        <div class="alert" style="margin-top:12px;text-align:start"><span class="ic" style="font-size:18px">💧</span><div><b style="font-size:13px">صار له ٣ ساعات من آخر «الشرب»</b><small>كتبت: ذكّرني كل ساعتين</small></div></div></div>`,
-      h:'يتعلّم منك وينبّهك', p:'من اللي تكتبه، أثر يفهم وش يحتاج لما يتضايق، وينبّهك قبل الضيق بالأوقات اللي تحددها.' },
+        <div class="alert" style="margin-top:12px;text-align:start"><span class="ic" style="font-size:18px">💧</span><div><b style="font-size:13px">صار له ٣ ساعات ما شرب</b><small>قدّم له ماء قبل ما يتضايق</small></div></div></div>`,
+      h:'يفهم وش يحتاج', p:'لما يتضايق، أثر يربط سلوكه باحتياجاته اللي كتبتها وآخر مرة شرب أو دخل الحمام، ويتعلّم منك مع كل مرة.' },
     { art:`<div style="width:86%;border-radius:26px;overflow:hidden;box-shadow:var(--sh-2);height:78%">${mapSVG({ name:'مسجد الحي' })}</div>`,
       h:'لو طلع.. يرجّعه', p:'تنبيه فوري مع موقعه، وتوقّع ليش طلع ووين رايح — «وقت صلاة، غالبًا رايح المسجد».' },
   ];
@@ -886,25 +886,32 @@ function setup(o){
   o.innerHTML = `<div style="padding:40px 24px 30px;overflow-y:auto;height:100%">
     <div class="mark" style="width:64px;height:64px;border-radius:22px"></div>
     <h2 style="font-size:26px;color:var(--teal-900);margin-top:18px">خلنا نتعرّف عليه</h2>
-    <p class="muted" style="line-height:1.9;margin-top:4px">بعدها تكتب احتياجاته بنفسك — أنت أدرى فيه.</p>
+    <p class="muted" style="line-height:1.9;margin-top:4px">جهزنا لك أسرة تجريبية تقدر تعدّلها — أو اكتب بياناتك الحين.</p>
     <form id="sf">
-      <div class="field"><label>اسم المريض</label><input name="name" placeholder="مثال: عبدالله" required></div>
-      <div class="field"><label>وش تناديه؟</label><input name="nick" placeholder="مثال: أبوي، يمه، أبو محمد" required></div>
-      <div class="field"><label>عمره</label><input name="age" type="number" placeholder="٧٥"></div>
-      <div class="field"><label>اسمك (المرافق)</label><input name="cg" placeholder="اسمك" required></div>
-      <button class="btn btn-primary btn-block mt20">ابدأ واكتب احتياجاته ${ic('fwd', 20)}</button>
+      <div class="field"><label>اسم المريض</label><input name="name" value="${esc(S.patient.name)}" required></div>
+      <div class="field"><label>وش تناديه؟</label><input name="nick" value="${esc(S.patient.nick)}" required></div>
+      <div class="field"><label>عمره</label><input name="age" type="number" value="${S.patient.age}"></div>
+      <div class="field"><label>اسمك (المرافق)</label><input name="cg" value="${esc(S.caregiver.name)}" required></div>
+      <button class="btn btn-primary btn-block mt20">ابدأ مع أثر ${ic('fwd', 20)}</button>
+      <p class="muted mt12" style="font-size:12.5px;text-align:center">البيانات تنحفظ على جوالك، وتقدر تعدّل كل شي وتضيف احتياجاته من ملف المريض.</p>
     </form>
-    <button class="btn btn-block mt8" id="demo" style="height:46px;color:var(--teal-700);font-size:14px">${ic('spark', 18)} أبي أجرّب ببيانات تجريبية أول</button>
-    <p class="muted mt12" style="font-size:12.5px;text-align:center">البيانات تنحفظ على جوالك، وتقدر تعدّل كل شي من ملف المريض.</p>
+    <button class="btn btn-block mt8" id="blankStart" style="height:46px;color:var(--teal-700);font-size:14px">${ic('edit', 18)} أبي أبدأ من الصفر وأكتب احتياجاته بنفسي</button>
   </div>`;
   const finish = () => { S.onboarded = true; save(); o.style.transition = 'opacity .4s'; o.style.opacity = 0; setTimeout(() => o.remove(), 400); render(); };
   o.querySelector('#sf').onsubmit = e => {
     e.preventDefault(); const d = Object.fromEntries(new FormData(e.target).entries());
+    const oldNick = S.patient.nick;
+    Object.assign(S.patient, { name:d.name.trim(), nick:d.nick.trim(), age:+d.age || 70 }); S.caregiver.name = d.cg.trim();
+    if (oldNick && oldNick !== S.patient.nick) [...S.calming, ...S.needs].forEach(x => { if (x.text) x.text = x.text.split(oldNick).join(S.patient.nick); if (x.todo) x.todo = x.todo.split(oldNick).join(S.patient.nick); });
+    finish();
+  };
+  o.querySelector('#blankStart').onclick = () => {
+    const f = o.querySelector('#sf'); if (!f.reportValidity()) return;
+    const d = Object.fromEntries(new FormData(f).entries());
     S = blank();
     Object.assign(S.patient, { name:d.name.trim(), nick:d.nick.trim(), age:+d.age || 70 }); S.caregiver.name = d.cg.trim();
     tab = 'home'; finish(); setTimeout(editNeed, 450);
   };
-  o.querySelector('#demo').onclick = () => { S = seed(); finish(); toast('هذي بيانات تجريبية — تقدر تمسحها من الإعدادات'); };
 }
 
 /* ---------------- Boot ---------------- */

@@ -9,7 +9,7 @@
 
 const phone = document.getElementById('phone');
 const appEl = document.getElementById('app');
-const KEY = 'athar.v2';
+const KEY = 'athar.v3';
 const H = 3600e3, M = 60e3;
 
 /* ---------------- Helpers ---------------- */
@@ -92,7 +92,8 @@ function blank(){
   return { onboarded:false, patient:{ name:'', nick:'', age:70, stage:'مرحلة متوسطة' }, caregiver:{ name:'', phone:'' },
     needs:[], routine:[], calming:[], health:[], places:[], learn:{}, placeVisits:{}, events:[], wanderLog:[], geofence:{ on:true, radius:200 } };
 }
-function seed(){
+/** Example family. Needs start empty — the caregiver writes them — unless withNeeds (full demo from settings). */
+function seed(withNeeds = false){
   const now = Date.now();
   const N = (name, emoji, signs, todo, every, agoH) => ({ id:uid(), name, emoji, signs, todo, every, last: now - agoH * H });
   const needs = [
@@ -114,7 +115,7 @@ function seed(){
     onboarded:false,
     patient:{ name:'عبدالله', nick:'أبو محمد', age:78, stage:'مرحلة متوسطة' },
     caregiver:{ name:'محمد', phone:'' },
-    needs,
+    needs: withNeeds ? needs : [],
     routine:[
       { id:uid(), time:'05:00', title:'صلاة الفجر في المسجد', note:'يصحى لحاله قبل الأذان', icon:'mosque' },
       { id:uid(), time:'07:30', title:'الفطور', note:'تمر وقهوة بالهيل وخبز بر', icon:'food' },
@@ -153,7 +154,7 @@ function seed(){
     ],
     learn:{},
     placeVisits:{},
-    events:[
+    events: !withNeeds ? [] : [
       ev(6,15,['يقوم ويقعد','يشد بنطلونه'],bath,bath),
       ev(5,17,['يسكت ويطالع حوله بخوف'],scared,scared),
       ev(5,11,['يلحس شفايفه'],water,water),
@@ -843,7 +844,7 @@ function settings(){
     o.querySelector('#s2').onclick = () => { S.geofence.on = !S.geofence.on; save(); closeSheet(); render(); toast(S.geofence.on ? 'السياج الآمن مفعّل' : 'السياج الآمن موقف', 'shield'); };
     o.querySelector('#s3').onclick = () => { if ('Notification' in window) Notification.requestPermission().then(() => { closeSheet(); toast('تم تحديث الإشعارات', 'bell'); }); };
     o.querySelector('#s4').onclick = wander;
-    o.querySelector('#s6').onclick = () => { if (confirm('تبدّل بياناتك ببيانات تجريبية؟ بتنحذف بياناتك الحالية.')) { S = seed(); S.onboarded = true; save(); closeSheet(); render(); toast('هذي بيانات تجريبية للتجربة'); } };
+    o.querySelector('#s6').onclick = () => { if (confirm('تبدّل بياناتك ببيانات تجريبية؟ بتنحذف بياناتك الحالية.')) { S = seed(true); S.onboarded = true; save(); closeSheet(); render(); toast('هذي بيانات تجريبية للتجربة'); } };
     o.querySelector('#s5').onclick = () => { if (confirm('تمسح كل البيانات وتبدأ من جديد؟ ما تقدر ترجعها.')) { localStorage.removeItem(KEY); location.reload(); } };
   });
 }
@@ -895,7 +896,7 @@ function setup(o){
       <button class="btn btn-primary btn-block mt20">ابدأ مع أثر ${ic('fwd', 20)}</button>
       <p class="muted mt12" style="font-size:12.5px;text-align:center">البيانات تنحفظ على جوالك، وتقدر تعدّل كل شي وتضيف احتياجاته من ملف المريض.</p>
     </form>
-    <button class="btn btn-block mt8" id="blankStart" style="height:46px;color:var(--teal-700);font-size:14px">${ic('edit', 18)} أبي أبدأ من الصفر وأكتب احتياجاته بنفسي</button>
+    <button class="btn btn-block mt8" id="blankStart" style="height:46px;color:var(--teal-700);font-size:14px">${ic('edit', 18)} أبي أبدأ من الصفر بدون أي بيانات تجريبية</button>
   </div>`;
   const finish = () => { S.onboarded = true; save(); o.style.transition = 'opacity .4s'; o.style.opacity = 0; setTimeout(() => o.remove(), 400); render(); };
   o.querySelector('#sf').onsubmit = e => {
@@ -903,7 +904,7 @@ function setup(o){
     const oldNick = S.patient.nick;
     Object.assign(S.patient, { name:d.name.trim(), nick:d.nick.trim(), age:+d.age || 70 }); S.caregiver.name = d.cg.trim();
     if (oldNick && oldNick !== S.patient.nick) [...S.calming, ...S.needs].forEach(x => { if (x.text) x.text = x.text.split(oldNick).join(S.patient.nick); if (x.todo) x.todo = x.todo.split(oldNick).join(S.patient.nick); });
-    finish();
+    finish(); if (!S.needs.length) setTimeout(editNeed, 450);
   };
   o.querySelector('#blankStart').onclick = () => {
     const f = o.querySelector('#sf'); if (!f.reportValidity()) return;
